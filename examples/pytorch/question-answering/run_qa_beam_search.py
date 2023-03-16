@@ -26,7 +26,7 @@ from typing import Optional
 
 import datasets
 import evaluate
-from datasets import load_dataset
+from datasets import load_dataset,load_from_disk
 from trainer_qa import QuestionAnsweringTrainer
 from utils_qa import postprocess_qa_predictions_with_beam_search
 
@@ -282,14 +282,20 @@ def main():
     #
     # In distributed training, the load_dataset function guarantee that only one local process can concurrently
     # download the dataset.
+
     if data_args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
-        raw_datasets = load_dataset(
-            data_args.dataset_name,
-            data_args.dataset_config_name,
-            cache_dir=model_args.cache_dir,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
+        try:
+          raw_datasets = load_dataset(
+              data_args.dataset_name,
+              data_args.dataset_config_name,
+              cache_dir=model_args.cache_dir,
+              use_auth_token=True if model_args.use_auth_token else None,
+          )
+        except:
+          raw_datasets = load_from_disk(
+              data_args.dataset_name
+          )
     else:
         data_files = {}
         if data_args.train_file is not None:
